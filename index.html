@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>みんなの百人一首</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <!-- ヘッダー -->
+        <header class="main-header">
+            <h1>みんなの百人一首</h1>
+            <div class="status-bar">
+                <span class="stamp-count">スタンプ: <span id="stamp-display">0</span>こ</span>
+            </div>
+        </header>
+
+        <!-- メインコンテンツエリア -->
+        <main>
+            <!-- 1. タイトル画面 -->
+            <section id="screen-title" class="screen active">
+                <div class="title-content">
+                    <h2>みんなの<br>百人一首</h2>
+                    <button id="btn-start" class="btn-primary btn-large">スタート！</button>
+                </div>
+            </section>
+
+            <!-- 2. メニュー画面 -->
+            <section id="screen-menu" class="screen hidden">
+                <h2>なにをする？</h2>
+                <div class="menu-buttons">
+                    <button id="btn-mode-practice" class="btn-secondary btn-block">
+                        <span class="icon">📖</span> れんしゅう
+                    </button>
+                    <button id="btn-mode-challenge" class="btn-secondary btn-block">
+                        <span class="icon">🔥</span> チャレンジ
+                    </button>
+                    <button id="btn-zukan" class="btn-info btn-block">
+                        <span class="icon">📒</span> ずかん
+                    </button>
+                    <button id="btn-settings" class="btn-info btn-block">
+                        <span class="icon">⚙️</span> せってい
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. クイズ画面 -->
+            <section id="screen-quiz" class="screen hidden">
+                <div class="quiz-container">
+                    <!-- 上の句エリア -->
+                    <div class="question-area">
+                        <div class="question-card">
+                            <p class="kami-no-ku" id="quiz-kami-no-ku"></p>
+                        </div>
+                    </div>
+                    <!-- 下の句（選択肢）エリア -->
+                    <div class="answer-area">
+                        <p class="instruction">下の句（しものく）をえらぼう！</p>
+                        <div class="options-grid" id="options-container">
+                            <!-- ボタンはJSで生成 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. 正誤・解説画面 -->
+            <section id="screen-result" class="screen hidden">
+                <div class="result-overlay" id="result-mark"></div> <!-- ○か×を表示 -->
+                <div class="result-content">
+                    <h3 id="result-message"></h3>
+                    <div class="poem-detail">
+                        <p class="full-poem-kami" id="result-kami"></p>
+                        <p class="full-poem-shimo" id="result-shimo"></p>
+                        <p class="author" id="result-author"></p>
+                        <div class="meaning-box">
+                            <h4>いみ</h4>
+                            <p id="result-meaning"></p>
+                        </div>
+                    </div>
+                    <button id="btn-next-question" class="btn-primary">つぎへ</button>
+                </div>
+            </section>
+
+            <!-- 5. ゲーム終了画面 -->
+            <section id="screen-gameover" class="screen hidden">
+                <h2 id="gameover-title">おしまい！</h2>
+                <div class="gameover-content">
+                    <p id="gameover-message"></p>
+                    <div id="stamp-animation" class="stamp-anim hidden">💮 スタンプゲット！</div>
+                    <button id="btn-back-to-menu" class="btn-primary">メニューにもどる</button>
+                </div>
+            </section>
+
+            <!-- 6. ずかん画面 -->
+            <section id="screen-zukan" class="screen hidden">
+                <div class="screen-header">
+                    <h2>百人一首（ひゃくにんいっしゅ）ずかん</h2>
+                    <button class="btn-small btn-back" data-target="screen-menu">もどる</button>
+                </div>
+                <div class="zukan-list" id="zukan-list">
+                    <!-- JSでリスト生成 -->
+                </div>
+            </section>
+
+            <!-- 7. せってい画面 -->
+            <section id="screen-settings" class="screen hidden">
+                <div class="screen-header">
+                    <h2>せってい</h2>
+                    <button class="btn-small btn-back" data-target="screen-menu">もどる</button>
+                </div>
+                <div class="settings-list">
+                    <div class="setting-item">
+                        <label for="setting-volume">おんりょう</label>
+                        <input type="range" id="setting-volume" min="0" max="1" step="0.1" value="0.8">
+                    </div>
+                    <div class="setting-item">
+                        <label>スタンプ</label>
+                        <button id="btn-reset-stamps" class="btn-secondary btn-small">スタンプをリセットする</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div class="home-button-container">
+            <button id="btn-home" class="btn-secondary btn-small">🏠 ホームにもどる</button>
+        </div>
+
+        <footer>
+            <small>&copy; 2024 Hyakunin Isshu App</small>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,401 @@
+:root {
+    /* Colors */
+    --primary-color: #d3545e; /* Akabeni - Reddish */
+    --secondary-color: #e6b422; /* Gold/Yellow */
+    --bg-color: #fcfaf2; /* Washi white */
+    --text-color: #3e2e28; /* Dark brown */
+    --accent-color: #6a8372; /* Green */
+    --card-bg: #ffffff;
+    --shadow: 0 4px 6px rgba(0,0,0,0.1);
+    
+    /* Spacing */
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    
+    /* Font */
+    --font-main: 'Zen Maru Gothic', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    /* Washi texture effect */
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d4d0c7' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+#app {
+    max-width: 1000px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.main-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
+}
+
+.main-header h1 {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.status-bar {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+/* Main Content */
+main {
+    flex: 1;
+    padding: var(--spacing-md);
+    position: relative;
+    overflow: hidden; /* For transitions */
+}
+
+.screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+.screen.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.screen.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* Buttons */
+button {
+    font-family: var(--font-main);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    font-weight: bold;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 24px;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 0 #a03e46;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    padding: 16px;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 0 #c59b1b;
+}
+
+.btn-info {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 16px;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 0 #4f6356;
+}
+
+.btn-large {
+    font-size: 2rem;
+    padding: 20px 40px;
+    border-radius: 50px;
+}
+
+.btn-block {
+    width: 100%;
+    margin-bottom: var(--spacing-md);
+    text-align: left;
+    padding-left: 32px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    background-color: #ccc;
+    color: #333;
+    box-shadow: 0 2px 0 #999;
+}
+
+/* Title Screen */
+#screen-title {
+    justify-content: center;
+    text-align: center;
+}
+
+#screen-title h2 {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+}
+
+/* Menu Screen */
+#screen-menu {
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+#screen-menu h2 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-color);
+}
+
+.menu-buttons {
+    width: 100%;
+}
+
+.icon {
+    margin-right: 12px;
+}
+
+/* Quiz Screen */
+.quiz-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.question-area {
+    background-color: var(--card-bg);
+    border: 4px solid var(--primary-color);
+    border-radius: 16px;
+    padding: var(--spacing-lg);
+    text-align: center;
+    position: relative;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+}
+
+.kami-no-ku {
+    font-size: 1.8rem;
+    font-weight: bold;
+    line-height: 2;
+}
+
+.speaker-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.answer-area {
+    width: 100%;
+}
+
+.instruction {
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+}
+
+.option-btn {
+    background-color: white;
+    border: 2px solid var(--secondary-color);
+    padding: 20px;
+    font-size: 1.2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 0 #e0e0e0;
+    transition: all 0.2s;
+}
+
+.option-btn:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+/* Result Screen */
+.result-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15rem;
+    font-weight: bold;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.result-overlay.correct {
+    color: #ff4757;
+    text-shadow: 0 0 20px white;
+}
+
+.result-overlay.incorrect {
+    color: #2f3542;
+    text-shadow: 0 0 20px white;
+}
+
+.result-content {
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+}
+
+.poem-detail {
+    margin: 20px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.full-poem-kami, .full-poem-shimo {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.author {
+    text-align: right;
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 16px;
+}
+
+.meaning-box {
+    border-top: 1px dashed #ccc;
+    padding-top: 16px;
+    text-align: left;
+}
+
+.meaning-box h4 {
+    color: var(--accent-color);
+    margin-bottom: 4px;
+}
+
+/* Zukan List */
+.zukan-list {
+    width: 100%;
+    max-width: 800px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-bottom: 40px;
+}
+
+.zukan-item {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.zukan-item.learned {
+    background-color: #e8f5e9;
+    border-left: 5px solid var(--accent-color);
+}
+
+.check-learned {
+    transform: scale(1.5);
+    margin-left: 10px;
+}
+
+/* Settings */
+.settings-list {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #eee;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    /* Tablet/PC Landscape */
+    .quiz-container {
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .question-area {
+        flex: 1;
+        font-size: 1.2rem;
+    }
+
+    .answer-area {
+        flex: 1;
+    }
+
+    .options-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .zukan-list {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.home-button-container {
+    text-align: center;
+    padding: var(--spacing-md);
+    background-color: rgba(255, 255, 255, 0.5);
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
