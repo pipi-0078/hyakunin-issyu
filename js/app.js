@@ -4,15 +4,18 @@
 const MAX_PRACTICE_QUESTIONS = 5; // れんしゅうモードの問題数
 
 let currentMode = null; // 'practice' or 'challenge'
+let currentCategory = 'master'; // 'pink', 'orange', 'yellow', 'blue', 'green', 'master'
 let currentQuestionIndex = 0; // れんしゅうモード用
 let currentScore = 0; // チャレンジモード用（連続正解数）
 let currentQuestionData = null; // 現在出題中のデータ
 let isAnswering = false; // 回答受付中かどうか
+let questionPool = []; // 現在のモード・カテゴリーで使用する問題リスト
 
 // --- DOM要素の取得 ---
 const screens = {
     title: document.getElementById('screen-title'),
     menu: document.getElementById('screen-menu'),
+    categorySelect: document.getElementById('screen-category-select'),
     quiz: document.getElementById('screen-quiz'),
     result: document.getElementById('screen-result'),
     gameover: document.getElementById('screen-gameover'),
@@ -34,9 +37,10 @@ const ui = {
     gameoverMessage: document.getElementById('gameover-message'),
     stampAnimation: document.getElementById('stamp-animation'),
     zukanList: document.getElementById('zukan-list'),
-    zukanList: document.getElementById('zukan-list'),
     settingVolume: document.getElementById('setting-volume')
 };
+
+let currentZukanFilter = 'all';
 
 // --- 初期化 ---
 function init() {
@@ -47,15 +51,33 @@ function init() {
 
 function setupEventListeners() {
     // 画面遷移ボタン
-    // 画面遷移ボタン
     document.getElementById('btn-start').addEventListener('click', () => {
         showScreen('menu');
     });
 
-    document.getElementById('btn-mode-practice').addEventListener('click', () => startPractice());
-    document.getElementById('btn-mode-challenge').addEventListener('click', () => startChallenge());
+    document.getElementById('btn-mode-practice').addEventListener('click', () => showCategorySelection('practice'));
+    document.getElementById('btn-mode-challenge').addEventListener('click', () => showCategorySelection('challenge'));
     document.getElementById('btn-zukan').addEventListener('click', () => showZukan());
     document.getElementById('btn-settings').addEventListener('click', () => showScreen('settings'));
+
+    // カテゴリー選択ボタン
+    document.querySelectorAll('.btn-category').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const category = e.target.dataset.category;
+            startGame(category);
+        });
+    });
+
+    // 図鑑フィルターボタン
+    document.querySelectorAll('.btn-filter').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            currentZukanFilter = e.target.dataset.filter;
+            // ボタンの見た目更新
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            showZukan();
+        });
+    });
 
     // 共通「もどる」ボタン
     document.querySelectorAll('.btn-back').forEach(btn => {
@@ -66,12 +88,10 @@ function setupEventListeners() {
     });
 
     // クイズ関連
-    // クイズ関連
     document.getElementById('btn-next-question').addEventListener('click', nextQuestion);
     document.getElementById('btn-back-to-menu').addEventListener('click', () => showScreen('menu'));
     document.getElementById('btn-home').addEventListener('click', () => showScreen('title'));
 
-    // 設定変更
     // 設定変更
     ui.settingVolume.addEventListener('input', (e) => {
         storage.updateSettings('sound_volume', parseFloat(e.target.value));
@@ -87,12 +107,58 @@ function setupEventListeners() {
     });
 }
 
+// ... (skip unchanged functions) ...
+
+// --- ずかん機能 ---
+function showZukan() {
+    showScreen('zukan');
+    ui.zukanList.innerHTML = '';
+
+    const filteredData = currentZukanFilter === 'all' 
+        ? HYAKUNIN_ISSHU_DATA 
+        : HYAKUNIN_ISSHU_DATA.filter(d => d.category === currentZukanFilter);
+
+    filteredData.forEach(data => {
+        const isLearned = storage.learnedIds.includes(data.id);
+
+        const item = document.createElement('div');
+        item.className = `zukan-item ${isLearned ? 'learned' : ''}`;
+        
+        // カテゴリー表示用のクラスを追加
+        if (data.category) {
+            item.classList.add(`category-${data.category}`);
+        }
+
+        const content = document.createElement('div');
+        content.innerHTML = `
+            <strong>${data.id}. ${data.author}</strong><br>
+            ${data.kami_no_ku}<br>
+            ${data.shimo_no_ku}
+        `;
+
+        const checkBtn = document.createElement('input');
+        checkBtn.type = 'checkbox';
+        checkBtn.className = 'check-learned';
+        checkBtn.checked = isLearned;
+        checkBtn.onchange = () => {
+            const learned = storage.toggleLearned(data.id);
+            item.classList.toggle('learned', learned);
+        };
+
+        item.appendChild(content);
+        item.appendChild(checkBtn);
+        ui.zukanList.appendChild(item);
+    });
+}
+
 // --- 画面遷移 ---
 function showScreen(screenName) {
     // すべての画面を非表示
     Object.values(screens).forEach(s => {
-        s.classList.remove('active');
-        s.classList.add('hidden');
+        if (s) {
+            s.classList.remove('active');
+            s.classList.add('hidden');
+        }
     });
 
     // 指定された画面を表示
@@ -115,15 +181,35 @@ function loadSettingsToUI() {
 
 // --- ゲームロジック ---
 
+function showCategorySelection(mode) {
+    currentMode = mode;
+    showScreen('categorySelect');
+}
+
+function startGame(category) {
+    currentCategory = category;
+    
+    // 問題プールを作成
+    if (category === 'master') {
+        questionPool = [...HYAKUNIN_ISSHU_DATA];
+    } else {
+        questionPool = HYAKUNIN_ISSHU_DATA.filter(d => d.category === category);
+    }
+    
+    if (currentMode === 'practice') {
+        startPractice();
+    } else {
+        startChallenge();
+    }
+}
+
 function startPractice() {
-    currentMode = 'practice';
     currentQuestionIndex = 0;
     showScreen('quiz');
     generateQuestion();
 }
 
 function startChallenge() {
-    currentMode = 'challenge';
     currentScore = 0;
     showScreen('quiz');
     generateQuestion();
@@ -133,21 +219,23 @@ function generateQuestion() {
     isAnswering = true;
 
     // 正解を選ぶ（ランダム）
-    const correctIndex = Math.floor(Math.random() * HYAKUNIN_ISSHU_DATA.length);
-    currentQuestionData = HYAKUNIN_ISSHU_DATA[correctIndex];
+    // プールからランダムに選ぶ
+    const correctIndex = Math.floor(Math.random() * questionPool.length);
+    currentQuestionData = questionPool[correctIndex];
 
     // 不正解を3つ選ぶ
+    // 同じプールから選ぶ（難易度調整のため）
     const distractors = [];
     while (distractors.length < 3) {
-        const idx = Math.floor(Math.random() * HYAKUNIN_ISSHU_DATA.length);
-        if (idx !== correctIndex && !distractors.includes(idx)) {
-            distractors.push(idx);
+        const idx = Math.floor(Math.random() * questionPool.length);
+        const distractor = questionPool[idx];
+        if (distractor.id !== currentQuestionData.id && !distractors.some(d => d.id === distractor.id)) {
+            distractors.push(distractor);
         }
     }
 
     // 選択肢を作成（正解 + 不正解）
-    const options = [currentQuestionData];
-    distractors.forEach(idx => options.push(HYAKUNIN_ISSHU_DATA[idx]));
+    const options = [currentQuestionData, ...distractors];
 
     // シャッフル
     shuffleArray(options);
@@ -164,8 +252,6 @@ function generateQuestion() {
         btn.onclick = () => handleAnswer(opt.id);
         ui.optionsContainer.appendChild(btn);
     });
-
-
 }
 
 function handleAnswer(selectedId) {
@@ -193,7 +279,7 @@ function showResultScreen(isCorrect) {
     ui.resultMessage.textContent = isCorrect ? 'せいかい！' : 'ざんねん...';
     ui.resultKami.innerHTML = addRuby(currentQuestionData.kami_no_ku, currentQuestionData.kami_no_ku_kana);
     ui.resultShimo.innerHTML = addRuby(currentQuestionData.shimo_no_ku, currentQuestionData.shimo_no_ku_kana);
-    ui.resultAuthor.innerHTML = addRuby(currentQuestionData.author, ""); // 作者名のルビはデータにないので省略（必要ならデータに追加）
+    ui.resultAuthor.innerHTML = addRuby(currentQuestionData.author, ""); 
     ui.resultMeaning.textContent = currentQuestionData.meaning;
 
     // チャレンジモードで間違えたら即終了
@@ -260,11 +346,20 @@ function showZukan() {
     showScreen('zukan');
     ui.zukanList.innerHTML = '';
 
-    HYAKUNIN_ISSHU_DATA.forEach(data => {
+    const filteredData = currentZukanFilter === 'all' 
+        ? HYAKUNIN_ISSHU_DATA 
+        : HYAKUNIN_ISSHU_DATA.filter(d => d.category === currentZukanFilter);
+
+    filteredData.forEach(data => {
         const isLearned = storage.learnedIds.includes(data.id);
 
         const item = document.createElement('div');
         item.className = `zukan-item ${isLearned ? 'learned' : ''}`;
+        
+        // カテゴリー表示用のクラスを追加
+        if (data.category) {
+            item.classList.add(`category-${data.category}`);
+        }
 
         const content = document.createElement('div');
         content.innerHTML = `
@@ -299,37 +394,13 @@ function shuffleArray(array) {
 }
 
 // ルビ追加ヘルパー
-// 簡易的に全体にルビを振る（漢字とかなの対応が厳密でないため、全体をrubyタグで囲むスタイルにするか、
-// データ側で細かく分ける必要があるが、今回は簡易表示として全体ルビ、または漢字のみ抽出して...は難しいので
-// プロンプトの指示通り <ruby>漢字<rt>かんじ</rt></ruby> の形式にしたいが、
-// データが「全文漢字混じり」と「全文かな」しかないので、
-// ここでは簡易的に「上の句（かな）」のように並記するか、
-// あるいはCSSでうまく表示する。
-// 今回は要件定義書に「<ruby>タグを使ってふりがなをつける」とあるが、
-// 自動で漢字部分だけにルビを振るのはライブラリがないと困難。
-// 妥協案として、漢字混じりの文の下に、ひらがなを表示するデザインにするか、
-// もしくはデータ構造を変える必要がある。
-// 今回のデータ構造では「kami_no_ku」と「kami_no_ku_kana」が分かれている。
-// 子供向けなので、ひらがなをメインにして、漢字を補足にするか、
-// 漢字の行の上にルビとしてひらがなを表示するのがベスト。
-// ここでは、HTMLのrubyタグの構造を利用して、
-// <ruby>漢字混じり文<rt>ひらがな全文</rt></ruby> という「モノルビ」ではなく「グループルビ」的な表示にする。
 function addRuby(text, kana) {
-    // 簡易実装：全体をrubyタグで囲む（ブラウザによっては見づらいかもしれないが、仕様を満たすため）
-    // より良い実装：漢字とひらがなが一致する部分を探すが、それは複雑。
-    // ここでは、視認性を考慮し、２行表示にする（CSSで制御）。
-    // しかし要件はrubyタグなので、それを使う。
     return `<ruby>${text}<rt>${kana}</rt></ruby>`;
 }
 
 // 音声再生（プレースホルダー）
 function playSound(type) {
-    // 効果音再生ロジック
-    // 実際には Audio オブジェクトを作成して再生
     // console.log(`Play Sound: ${type}`);
-
-    // 簡易的なビープ音や合成音声で代用も可能だが、
-    // ここではログ出力のみ（ファイルがないため）
 }
 
 // アプリ起動
