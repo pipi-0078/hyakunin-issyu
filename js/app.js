@@ -366,6 +366,10 @@ function showZukan() {
             <strong>${data.id}. ${data.author}</strong><br>
             ${data.kami_no_ku}<br>
             ${data.shimo_no_ku}
+            <div class="zukan-explanation">
+                <span class="explanation-label">【解説】</span>
+                ${data.explanation || ''}
+            </div>
         `;
 
         const checkBtn = document.createElement('input');
