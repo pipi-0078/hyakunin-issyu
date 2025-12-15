@@ -1,9 +1,7 @@
 // メインアプリケーションロジック
 
 // --- 定数・変数 ---
-const MAX_PRACTICE_QUESTIONS = 5; // れんしゅうモードの問題数
 
-let currentMode = null; // 'practice' or 'challenge'
 let currentCategory = 'master'; // 'pink', 'orange', 'yellow', 'blue', 'green', 'master'
 let currentQuestionIndex = 0; // れんしゅうモード用
 let currentScore = 0; // チャレンジモード用（連続正解数）
@@ -15,7 +13,6 @@ let questionPool = []; // 現在のモード・カテゴリーで使用する問
 const screens = {
     title: document.getElementById('screen-title'),
     menu: document.getElementById('screen-menu'),
-    categorySelect: document.getElementById('screen-category-select'),
     quiz: document.getElementById('screen-quiz'),
     result: document.getElementById('screen-result'),
     gameover: document.getElementById('screen-gameover'),
@@ -25,6 +22,7 @@ const screens = {
 
 const ui = {
     stampDisplay: document.getElementById('stamp-display'),
+    quizCounter: document.getElementById('quiz-counter'),
     quizKami: document.getElementById('quiz-kami-no-ku'),
     optionsContainer: document.getElementById('options-container'),
     resultMark: document.getElementById('result-mark'),
@@ -55,8 +53,6 @@ function setupEventListeners() {
         showScreen('menu');
     });
 
-    document.getElementById('btn-mode-practice').addEventListener('click', () => showCategorySelection('practice'));
-    document.getElementById('btn-mode-challenge').addEventListener('click', () => showCategorySelection('challenge'));
     document.getElementById('btn-zukan').addEventListener('click', () => showZukan());
     document.getElementById('btn-settings').addEventListener('click', () => showScreen('settings'));
 
@@ -88,7 +84,7 @@ function setupEventListeners() {
     });
 
     // クイズ関連
-    document.getElementById('btn-next-question').addEventListener('click', nextQuestion);
+    // document.getElementById('btn-next-question').addEventListener('click', nextQuestion); // Removed to prevent double-fire
     document.getElementById('btn-back-to-menu').addEventListener('click', () => showScreen('menu'));
     document.getElementById('btn-home').addEventListener('click', () => showScreen('title'));
 
@@ -181,54 +177,63 @@ function loadSettingsToUI() {
 
 // --- ゲームロジック ---
 
-function showCategorySelection(mode) {
-    currentMode = mode;
-    showScreen('categorySelect');
-}
-
 function startGame(category) {
     currentCategory = category;
     
     // 問題プールを作成
+    let fullPool = [];
     if (category === 'master') {
-        questionPool = [...HYAKUNIN_ISSHU_DATA];
+        fullPool = [...HYAKUNIN_ISSHU_DATA];
     } else {
-        questionPool = HYAKUNIN_ISSHU_DATA.filter(d => d.category === category);
+        fullPool = HYAKUNIN_ISSHU_DATA.filter(d => d.category === category);
     }
+
+    // シャッフルしてすべて出題する
+    shuffleArray(fullPool);
+    questionPool = fullPool;
     
-    if (currentMode === 'practice') {
-        startPractice();
-    } else {
-        startChallenge();
-    }
-}
-
-function startPractice() {
     currentQuestionIndex = 0;
-    showScreen('quiz');
-    generateQuestion();
-}
-
-function startChallenge() {
     currentScore = 0;
+    
     showScreen('quiz');
     generateQuestion();
 }
 
 function generateQuestion() {
     isAnswering = true;
+    
+    // カウンター更新
+    ui.quizCounter.textContent = `${currentQuestionIndex + 1} / ${questionPool.length}`;
 
-    // 正解を選ぶ（ランダム）
-    // プールからランダムに選ぶ
-    const correctIndex = Math.floor(Math.random() * questionPool.length);
-    currentQuestionData = questionPool[correctIndex];
-
+    // 正解を選ぶ（プールから順番に、ただしプール自体はシャッフル済み）
+    // currentQuestionIndex を使う
+    currentQuestionData = questionPool[currentQuestionIndex];
+    
     // 不正解を3つ選ぶ
-    // 同じプールから選ぶ（難易度調整のため）
+    // 全データから、現在の正解以外を選ぶ。同じカテゴリーに限定するかは要件次第だが、
+    // 一般的には「全データからランダム」の方が選択肢として面白い（あるいは同カテから？）
+    // 元のロジックは「questionPool（同カテゴリ）から選ぶ」だった。
+    // カテゴリが20枚しかない場合、選択肢がマンネリ化するので、
+    // ここでは「全データ(HYAKUNIN_ISSHU_DATA)からランダム」に変更するか、
+    // あるいは「questionPoolの元データ（同カテゴリ）」から選ぶか。
+    // 元のロジック: questionPoolから選ぶ。
+    // questionPoolは今や "20 item subset" になっている。
+    // だから不正解候補は "全カテゴリデータ" or "全データ" から取るべき。
+    // 難易度的には「同カテゴリ」から選ぶのが基本だが、枚数が少ないと被る。
+    // 今回は「カテゴリ選択」しているので、そのカテゴリの中から選ぶのが自然。
+    // => 元のデータセットからフィルタして広めのプールを作る
+    
+    let distractorPool = [];
+    if (currentCategory === 'master') {
+        distractorPool = HYAKUNIN_ISSHU_DATA;
+    } else {
+        distractorPool = HYAKUNIN_ISSHU_DATA.filter(d => d.category === currentCategory);
+    }
+    
     const distractors = [];
     while (distractors.length < 3) {
-        const idx = Math.floor(Math.random() * questionPool.length);
-        const distractor = questionPool[idx];
+        const idx = Math.floor(Math.random() * distractorPool.length);
+        const distractor = distractorPool[idx];
         if (distractor.id !== currentQuestionData.id && !distractors.some(d => d.id === distractor.id)) {
             distractors.push(distractor);
         }
@@ -277,36 +282,41 @@ function showResultScreen(isCorrect) {
     showScreen('result');
 
     ui.resultMessage.textContent = isCorrect ? 'せいかい！' : 'ざんねん...';
+
+    // Update counter to show progress immediately
+    const nextNum = Math.min(currentQuestionIndex + 2, questionPool.length);
+    if (currentQuestionIndex + 1 >= questionPool.length) {
+         // Last question
+         ui.quizCounter.textContent = `${questionPool.length} / ${questionPool.length}`;
+    } else {
+         ui.quizCounter.textContent = `${nextNum} / ${questionPool.length}`;
+    }
+
     ui.resultKami.innerHTML = addRuby(currentQuestionData.kami_no_ku, currentQuestionData.kami_no_ku_kana);
     ui.resultShimo.innerHTML = addRuby(currentQuestionData.shimo_no_ku, currentQuestionData.shimo_no_ku_kana);
     ui.resultAuthor.innerHTML = addRuby(currentQuestionData.author, ""); 
     ui.resultMeaning.textContent = currentQuestionData.meaning;
 
-    // チャレンジモードで間違えたら即終了
-    if (currentMode === 'challenge' && !isCorrect) {
-        document.getElementById('btn-next-question').onclick = finishGame;
-        document.getElementById('btn-next-question').textContent = 'けっかはっぴょう';
-    } else {
-        document.getElementById('btn-next-question').onclick = nextQuestion;
-        document.getElementById('btn-next-question').textContent = 'つぎへ';
-    }
+    // 次へボタン
+    const nextBtn = document.getElementById('btn-next-question');
+    nextBtn.textContent = 'つぎへ';
+    nextBtn.onclick = () => {
+        // ダブルクリック防止
+        nextBtn.onclick = null;
+        nextQuestion();
+    };
 
     // スコア加算
-    if (currentMode === 'challenge' && isCorrect) {
+    if (isCorrect) {
         currentScore++;
     }
 }
 
 function nextQuestion() {
-    if (currentMode === 'practice') {
-        currentQuestionIndex++;
-        if (currentQuestionIndex >= MAX_PRACTICE_QUESTIONS) {
-            finishGame();
-        } else {
-            showScreen('quiz');
-            generateQuestion();
-        }
-    } else if (currentMode === 'challenge') {
+    currentQuestionIndex++;
+    if (currentQuestionIndex >= questionPool.length) {
+        finishGame();
+    } else {
         showScreen('quiz');
         generateQuestion();
     }
@@ -316,29 +326,32 @@ function finishGame() {
     showScreen('gameover');
     ui.stampAnimation.classList.add('hidden');
 
-    if (currentMode === 'practice') {
-        ui.gameoverTitle.textContent = 'おつかれさま！';
-        ui.gameoverMessage.textContent = 'れんしゅうがおわったよ。スタンプをあげるね！';
+    ui.gameoverTitle.textContent = 'けっかはっぴょう';
+    ui.gameoverMessage.textContent = `${questionPool.length}もんちゅう ${currentScore}もん せいかい！`;
 
-        // スタンプ付与
-        storage.addStamp();
-        updateStampDisplay();
+    // 満点ならスタンプ？ あるいは一定以上で？
+    // とりあえず今回は「終わったらスタンプ」にするか、
+    // あるいは「正解数に応じて」にするか。
+    // 元のPractice: 5問終わればスタンプ。
+    // 元のChallenge: 記録更新でファンファーレ。
+    // 今回は「20問」なので、頑張ったで賞としてスタンプをあげてもいい。
+    // ひとまず「最後までやったらスタンプゲット」にする、ただし全問正解ならすごい演出など。
+    
+    // シンプルに毎回スタンプ付与（学習継続のご褒美）
+    storage.addStamp();
+    updateStampDisplay();
 
-        // アニメーション
-        setTimeout(() => {
-            ui.stampAnimation.classList.remove('hidden');
-            playSound('stamp');
-        }, 500);
-
-    } else {
-        ui.gameoverTitle.textContent = 'けっかはっぴょう';
-        ui.gameoverMessage.textContent = `${currentScore}もん れんぞくせいかい！`;
-
-        if (storage.updateHighScore(currentScore)) {
-            ui.gameoverMessage.textContent += '\nすごい！しんきろくだよ！';
-            playSound('fanfare');
-        }
+    // ハイスコア更新（categoryごととか本当は必要だけど、今は簡易的に）
+    // とりあえずスコア表示をメインにする
+    if (currentScore === questionPool.length) {
+         ui.gameoverMessage.textContent += '\nぜんもんせいかい！すごい！';
+         playSound('fanfare');
     }
+    
+    setTimeout(() => {
+        ui.stampAnimation.classList.remove('hidden');
+        playSound('stamp');
+    }, 500);
 }
 
 // --- ずかん機能 ---

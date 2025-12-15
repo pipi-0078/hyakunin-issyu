@@ -40,51 +40,43 @@
         <section id="screen-menu" class="screen hidden">
           <h2>なにをする？</h2>
           <div class="menu-buttons">
-            <button id="btn-mode-practice" class="btn-secondary btn-block">
-              <span class="icon">📖</span> れんしゅう
-            </button>
-            <button id="btn-mode-challenge" class="btn-secondary btn-block">
-              <span class="icon">🔥</span> チャレンジ
-            </button>
-            <button id="btn-zukan" class="btn-info btn-block">
-              <span class="icon">📒</span> ずかん
-            </button>
-            <button id="btn-settings" class="btn-info btn-block">
-              <span class="icon">⚙️</span> せってい
-            </button>
+            <div class="category-buttons-grid">
+              <button class="btn-category btn-pink" data-category="pink">
+                桃（もも）
+              </button>
+              <button class="btn-category btn-orange" data-category="orange">
+                橙（だいだい）
+              </button>
+              <button class="btn-category btn-yellow" data-category="yellow">
+                黄（き）
+              </button>
+              <button class="btn-category btn-blue" data-category="blue">
+                青（あお）
+              </button>
+              <button class="btn-category btn-green" data-category="green">
+                緑（みどり）
+              </button>
+              <button class="btn-category btn-master" data-category="master">
+                マスター（全部）
+              </button>
+            </div>
+            
+            <div class="sub-menu-buttons">
+              <button id="btn-zukan" class="btn-info btn-block">
+                <span class="icon">📒</span> ずかん
+              </button>
+              <button id="btn-settings" class="btn-info btn-block">
+                <span class="icon">⚙️</span> せってい
+              </button>
+            </div>
           </div>
-        </section>
-
-        <!-- 2.5. カテゴリー選択画面 -->
-        <section id="screen-category-select" class="screen hidden">
-          <h2>色をえらぼう</h2>
-          <div class="category-buttons">
-            <button class="btn-category btn-pink" data-category="pink">
-              桃（もも）
-            </button>
-            <button class="btn-category btn-orange" data-category="orange">
-              橙（だいだい）
-            </button>
-            <button class="btn-category btn-yellow" data-category="yellow">
-              黄（き）
-            </button>
-            <button class="btn-category btn-blue" data-category="blue">
-              青（あお）
-            </button>
-            <button class="btn-category btn-green" data-category="green">
-              緑（みどり）
-            </button>
-            <button class="btn-category btn-master" data-category="master">
-              マスター（全部）
-            </button>
-          </div>
-          <button class="btn-small btn-back" data-target="menu">
-            もどる
-          </button>
         </section>
 
         <!-- 3. クイズ画面 -->
         <section id="screen-quiz" class="screen hidden">
+          <div class="quiz-header">
+            <span id="quiz-counter"></span>
+          </div>
           <div class="quiz-container">
             <!-- 上の句エリア -->
             <div class="question-area">
